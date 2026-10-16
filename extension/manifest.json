@@ -1,0 +1,13 @@
+{
+  "manifest_version": 3,
+  "name": "Website Change Detector",
+  "version": "1.0.0",
+  "description": "Send the current public page to your change detector.",
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Watch this page",
+    "default_icon": { "16": "icon16.png", "48": "icon48.png" }
+  },
+  "permissions": ["tabs"],
+  "icons": { "16": "icon16.png", "48": "icon48.png" }
+}

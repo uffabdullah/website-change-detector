@@ -1,0 +1,5 @@
+body { margin: 0; width: 280px; padding: 16px; background: #0c0b09; color: #f4ecdf; font: 14px/1.4 "Segoe UI", sans-serif; }
+.eyebrow { letter-spacing: 0.14em; text-transform: uppercase; color: #c6a27a; font-size: 11px; }
+h1 { margin: 0 0 8px; letter-spacing: -0.04em; text-transform: uppercase; }
+#url { color: #9a9184; word-break: break-all; }
+button { width: 100%; border: 0; border-radius: 999px; padding: 10px 12px; background: #e2ff4d; color: #14120e; font-weight: 650; cursor: pointer; }
