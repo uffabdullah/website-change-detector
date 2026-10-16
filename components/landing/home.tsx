@@ -54,76 +54,22 @@ export function Home() {
 
   useEffect(() => {
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduced) return;
-    let revert: (() => void) | undefined;
-    let destroy: (() => void) | undefined;
+    if (reduced || !root.current) return;
     let alive = true;
+    let revert: (() => void) | undefined;
     (async () => {
-      const [{ default: gsap }, { ScrollTrigger }, { default: Lenis }] = await Promise.all([
-        import("gsap"),
-        import("gsap/ScrollTrigger"),
-        import("lenis"),
-      ]);
+      const { default: gsap } = await import("gsap");
+      const { ScrollTrigger } = await import("gsap/ScrollTrigger");
       if (!alive || !root.current) return;
       gsap.registerPlugin(ScrollTrigger);
-      const lenis = new Lenis({ lerp: 0.085, smoothWheel: true });
-      lenis.on("scroll", ScrollTrigger.update);
-      const onAnchor = (event: Event) => {
-        const target = event.target;
-        if (!(target instanceof Element)) return;
-        const link = target.closest("a[href^='#']");
-        if (!link) return;
-        const id = link.getAttribute("href");
-        const el = id ? document.querySelector(id) : null;
-        if (!el) return;
-        event.preventDefault();
-        lenis.scrollTo(el as HTMLElement, { offset: -12 });
-      };
-      root.current.addEventListener("click", onAnchor);
-      const onTick = (time: number) => lenis.raf(time * 1000);
-      gsap.ticker.add(onTick);
-      gsap.ticker.lagSmoothing(0);
-      destroy = () => {
-        root.current?.removeEventListener("click", onAnchor);
-        gsap.ticker.remove(onTick);
-        lenis.destroy();
-      };
       const ctx = gsap.context(() => {
-        const section = root.current?.querySelector(".answers");
-        const cards = gsap.utils.toArray<HTMLElement>(".answer");
-        if (section) section.classList.add("is-enhanced");
-        if (section && cards.length) {
-          cards[0]?.classList.add("on");
+        gsap.utils.toArray<HTMLElement>(".req, .bonus-card").forEach((card) => {
           ScrollTrigger.create({
-            trigger: section,
-            start: "top top",
-            end: "bottom bottom",
-            onUpdate: (self) => {
-              const index = Math.min(cards.length - 1, Math.floor(self.progress * cards.length));
-              cards.forEach((card, cardIndex) => card.classList.toggle("on", cardIndex === index));
-            },
+            trigger: card,
+            start: "top 90%",
+            once: true,
+            onEnter: () => card.classList.add("in"),
           });
-        }
-        gsap.from(".req", {
-          y: 28,
-          autoAlpha: 0,
-          duration: 0.7,
-          stagger: 0.06,
-          ease: "power2.out",
-          scrollTrigger: { trigger: ".req-grid", start: "top 75%" },
-        });
-        gsap.from(".bonus-card", {
-          y: 20,
-          autoAlpha: 0,
-          duration: 0.6,
-          stagger: 0.05,
-          scrollTrigger: { trigger: ".bonus-grid", start: "top 80%" },
-        });
-        gsap.to(".laptop", {
-          rotateX: 2,
-          rotateY: -6,
-          ease: "none",
-          scrollTrigger: { trigger: ".stage-3d", start: "top 80%", end: "bottom 20%", scrub: true },
         });
       }, root);
       revert = () => ctx.revert();
@@ -131,7 +77,6 @@ export function Home() {
     return () => {
       alive = false;
       revert?.();
-      destroy?.();
     };
   }, []);
 
@@ -243,12 +188,7 @@ export function Home() {
           </div>
         </section>
       </main>
-      <footer className="colophon">
-        <p>Still · Website Change Detector</p>
-        <p>Three.js, GSAP, Lenis, and Rive move the page. Supabase keeps the queue. The type is Stretch Pro when you have it, and a wide grotesque until then.</p>
-        <p><a href="/extension">Browser extension</a> · <a href="/demo">Sample console</a></p>
-      </footer>
-    </div>
+      </div>
   );
 }
 

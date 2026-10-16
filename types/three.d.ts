@@ -2,6 +2,7 @@ declare module "three" {
   export const WebGLRenderer: new (...args: any[]) => any;
   export const Scene: new (...args: any[]) => any;
   export const PerspectiveCamera: new (...args: any[]) => any;
+  export const IcosahedronGeometry: new (...args: any[]) => any;
   export const TorusKnotGeometry: new (...args: any[]) => any;
   export const TorusGeometry: new (...args: any[]) => any;
   export const MeshBasicMaterial: new (...args: any[]) => any;

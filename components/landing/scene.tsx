@@ -12,79 +12,73 @@ export function Scene() {
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     let frame = 0;
     let disposed = false;
+    let visible = true;
     let cleanup = () => {};
 
     (async () => {
       try {
         const THREE = await import("three");
         if (disposed) return;
-        const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true, powerPreference: "high-performance" });
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.6));
+        const renderer = new THREE.WebGLRenderer({
+          canvas,
+          alpha: true,
+          antialias: false,
+          powerPreference: "low-power",
+        });
+        renderer.setPixelRatio(1);
         const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 40);
-        camera.position.set(0, 0.1, 7.2);
-        const knot = new THREE.Mesh(
-          new THREE.TorusKnotGeometry(1.15, 0.28, 180, 18),
+        const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 20);
+        camera.position.set(0, 0, 6.2);
+        const core = new THREE.Mesh(
+          new THREE.IcosahedronGeometry(1.35, 1),
           new THREE.MeshBasicMaterial({ color: 0xe2ff4d, wireframe: true })
         );
         const ring = new THREE.Mesh(
-          new THREE.TorusGeometry(2.05, 0.012, 12, 120),
+          new THREE.TorusGeometry(2.15, 0.012, 6, 48),
           new THREE.MeshBasicMaterial({ color: 0xc6a27a })
         );
-        ring.rotation.x = Math.PI / 2.4;
-        const dots = new THREE.BufferGeometry();
-        const positions = new Float32Array(420 * 3);
-        for (let i = 0; i < positions.length; i += 3) {
-          const radius = 2.2 + Math.random() * 1.6;
-          const theta = Math.random() * Math.PI * 2;
-          const phi = Math.acos(2 * Math.random() - 1);
-          positions[i] = radius * Math.sin(phi) * Math.cos(theta);
-          positions[i + 1] = radius * Math.sin(phi) * Math.sin(theta) * 0.72;
-          positions[i + 2] = radius * Math.cos(phi);
-        }
-        dots.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-        const dust = new THREE.Points(dots, new THREE.PointsMaterial({ color: 0xf3ecdf, size: 0.02, transparent: true, opacity: 0.7 }));
-        scene.add(knot, ring, dust);
-        const pointer = { x: 0, y: 0 };
-        const onMove = (event: PointerEvent) => {
-          pointer.x = event.clientX / window.innerWidth - 0.5;
-          pointer.y = event.clientY / window.innerHeight - 0.5;
-        };
-        window.addEventListener("pointermove", onMove);
+        ring.rotation.x = 1.15;
+        scene.add(core, ring);
+
         const resize = () => {
           const rect = canvas.getBoundingClientRect();
-          renderer.setSize(rect.width, rect.height, false);
-          camera.aspect = rect.width / Math.max(rect.height, 1);
+          const width = Math.max(rect.width, 320);
+          const height = Math.max(rect.height, 320);
+          renderer.setSize(width, height, false);
+          camera.aspect = width / height;
           camera.updateProjectionMatrix();
         };
         resize();
         const observer = new ResizeObserver(resize);
         observer.observe(canvas);
+        const seen = new IntersectionObserver(([entry]) => {
+          visible = entry.isIntersecting;
+        });
+        seen.observe(canvas);
+
+        let last = 0;
         const tick = (time: number) => {
+          frame = requestAnimationFrame(tick);
+          if (!visible || document.hidden || time - last < 40) return;
+          last = time;
           if (!reduced) {
-            knot.rotation.y = time * 0.00018;
-            knot.rotation.x = time * 0.00008;
-            ring.rotation.z = time * 0.00022;
-            dust.rotation.y = time * 0.00005;
+            core.rotation.y = time * 0.00025;
+            core.rotation.x = time * 0.00012;
+            ring.rotation.z = time * 0.0002;
           }
-          camera.position.x += (pointer.x * 0.7 - camera.position.x) * 0.04;
-          camera.position.y += (-pointer.y * 0.4 - camera.position.y) * 0.04;
-          camera.lookAt(0, 0, 0);
           renderer.render(scene, camera);
-          if (!reduced) frame = requestAnimationFrame(tick);
         };
-        frame = requestAnimationFrame(tick);
-        if (reduced) renderer.render(scene, camera);
+        renderer.render(scene, camera);
+        if (!reduced) frame = requestAnimationFrame(tick);
+
         cleanup = () => {
           cancelAnimationFrame(frame);
           observer.disconnect();
-          window.removeEventListener("pointermove", onMove);
-          knot.geometry.dispose();
+          seen.disconnect();
+          core.geometry.dispose();
           ring.geometry.dispose();
-          dots.dispose();
-          (knot.material as { dispose: () => void }).dispose();
+          (core.material as { dispose: () => void }).dispose();
           (ring.material as { dispose: () => void }).dispose();
-          (dust.material as { dispose: () => void }).dispose();
           renderer.dispose();
         };
       } catch {
@@ -98,5 +92,10 @@ export function Scene() {
     };
   }, []);
 
-  return failed ? <div className="orb" /> : <canvas ref={ref} className="webgl" aria-hidden="true" />;
+  return (
+    <div className="stage-visual">
+      <div className="orb" />
+      {failed ? null : <canvas ref={ref} className="webgl" aria-hidden="true" />}
+    </div>
+  );
 }
