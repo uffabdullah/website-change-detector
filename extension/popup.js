@@ -1,4 +1,4 @@
-const SITE = "https://website-change-detector.vercel.app";
+const SITE = "https://website-change-detector-mu.vercel.app";
 
 const urlNode = document.querySelector("#url");
 const button = document.querySelector("#watch");
